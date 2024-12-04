@@ -1,0 +1,20 @@
+{
+  "style": "new-york",
+  "rsc": false,
+  "tsx": true,
+  "tailwind": {
+    "config": "tailwind.config.ts",
+    "css": "src/globals.css",
+    "baseColor": "zinc",
+    "cssVariables": true,
+    "prefix": ""
+  },
+  "aliases": {
+    "components": "@thydl/ui/components",
+    "utils": "@thydl/ui/lib/utils",
+    "ui": "@thydl/ui/components/ui",
+    "lib": "@thydl/ui/lib",
+    "hooks": "@thydl/ui/hooks"
+  },
+  "iconLibrary": "lucide"
+}

@@ -1,0 +1,10 @@
+{
+  "extends": "@thydl/typescript-config/react-library.json",
+  "include": ["."],
+  "exclude": ["dist", "build", "node_modules"],
+  "compilerOptions": {
+    "paths": {
+      "@thydl/ui/*": ["./src/*"]
+    }
+  }
+}
