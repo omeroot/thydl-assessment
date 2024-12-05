@@ -100,6 +100,7 @@ export default function FileUploader() {
       toast.error("Failed to upload files");
 
       setIsSent(null);
+      setButtonText("Upload");
     }
   };
 
