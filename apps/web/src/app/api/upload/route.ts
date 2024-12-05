@@ -13,7 +13,7 @@ export async function POST(request: NextRequest) {
 
     const model = new ChatOpenAI({
       apiKey: process.env.OPENAI_API_KEY,
-      model: "gpt-4o-mini",
+      model: "gpt-3.5-turbo",
       streamUsage: false,
       temperature: 0.8,
       verbose: false,
