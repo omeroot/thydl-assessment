@@ -15,7 +15,7 @@ export async function POST(request: NextRequest) {
       apiKey: process.env.OPENAI_API_KEY,
       model: "gpt-4o-mini",
       streamUsage: false,
-      temperature: 0.5,
+      temperature: 0.8,
       verbose: false,
     });
 
@@ -62,9 +62,23 @@ export async function POST(request: NextRequest) {
       `,
     });
 
+    const translatePrompt = ChatPromptTemplate.fromMessages([
+      [
+        "system",
+        "Translate the following json object non-english values to English.",
+      ],
+      ["human", "{json}"],
+    ]);
+
+    const translateChain = translatePrompt.pipe(model).pipe(parser);
+
+    const translatedMenu = await translateChain.invoke({
+      json: menu,
+    });
+
     return NextResponse.json({
       success: true,
-      formatted: menu,
+      formatted: translatedMenu,
     });
   } catch (error) {
     console.log("🚀 ~ file: route.ts:35 ~ POST ~ error", error);
