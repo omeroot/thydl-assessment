@@ -3,7 +3,6 @@
 import {
   Card,
   CardContent,
-  CardDescription,
   CardHeader,
   CardTitle,
 } from "@thydl/ui/components/ui/card";
@@ -21,14 +20,13 @@ export default function RestaurantMenu({
     <>
       {formattedMenu.menu.map((item) => (
         <Card
-          className="border-0 shadow-none rounded-none border-b border-gray-200 last:border-b-0 overflow-y-scroll"
+          className="border-0 shadow-none rounded-none border-b border-gray-200 last:border-b-0"
           key={nanoid(3)}
         >
           <CardHeader className="p-4">
             <CardTitle className="flex justify-between items-center">
               <span>{item.name}</span>
             </CardTitle>
-            <CardDescription>{item.description}</CardDescription>
           </CardHeader>
           <CardContent className="px-4 pb-4">
             <p className="text-sm text-muted-foreground">{item.description}</p>

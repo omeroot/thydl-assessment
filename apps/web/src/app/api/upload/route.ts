@@ -1,6 +1,5 @@
 /* eslint-disable turbo/no-undeclared-env-vars */
 /* eslint-disable no-console -- This directive is necessary to allow console logging for error handling */
-import "pdf-parse";
 import { writeFile } from "node:fs/promises";
 import path from "node:path";
 import type { NextRequest } from "next/server";
@@ -44,27 +43,35 @@ export async function POST(request: NextRequest) {
 
     const menu = await chain.invoke({
       query: `
-      Extract the restaurant menu items and their details in JSON format.
+        Extract the restaurant menu items and their details in JSON format with precision and completeness.
 
-      The output should be a JSON object with the following structure:
-      {
-        "menu": [
-          {
-            "name": "string",
-            "description": "string",
-          }
-        ],
-        notes: ["string"]
-      }
+        Output JSON Structure:
+        {
+          "menu": [
+            {
+              "name": "string",         // Exact menu item name
+              "description": "string"   // Detailed description based on ingredient information
+            }
+          ],
+          "notes": ["string"]           // Additional notes from the text
+        }
 
-      !Notes:
-      - The menu items should be in the same order as they appear in the text.
-      - The notes should be in the same order as they appear in the text.
-      - The notes should be in the same language as the text.
+        Extraction Guidelines:
+        - Preserve original item order from source text
+        - Maintain source text's original language
+        - Create descriptive menu item details using available ingredient information
+        - Ensure name and description accurately reflect source text
+        - Include all notes in original sequence and language
+        - The menu item name and description should be in the same language as the text.
 
-      Menu Content:
-      
-      ${text}
+        Parsing Instructions:
+        1. Carefully review entire text for menu items
+        2. Extract precise names matching source text
+        3. Craft detailed descriptions using ingredient insights
+        4. Capture any supplementary notes verbatim
+
+        Menu Content:
+        ${text}
       `,
     });
 

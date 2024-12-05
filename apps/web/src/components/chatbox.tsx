@@ -1,3 +1,4 @@
+/* eslint-disable react-hooks/exhaustive-deps */
 import { BotMessageSquare } from "lucide-react";
 import {
   Drawer,
@@ -10,7 +11,7 @@ import {
   DrawerTrigger,
 } from "@thydl/ui/components/ui/drawer";
 import { Button } from "@thydl/ui/components/ui/button";
-import { createRef, useEffect } from "react";
+import { createRef, useEffect, useState } from "react";
 import { nanoid } from "nanoid";
 import { useChat } from "ai/react";
 import { Textarea } from "@thydl/ui/components/ui/textarea";
@@ -25,6 +26,8 @@ export default function Chatbox({
 }) {
   const chatId = nanoid();
   const chatboxWrapper = createRef<HTMLDivElement>();
+  const [isOpen, setIsOpen] = useState(false);
+  const [currentScrollHeight, setCurrentScrollHeight] = useState(0);
 
   const { messages, input, handleInputChange, handleSubmit } = useChat({
     body: {
@@ -35,15 +38,17 @@ export default function Chatbox({
   });
 
   useEffect(() => {
-    if (chatboxWrapper.current) {
-      chatboxWrapper.current.scrollTo(0, chatboxWrapper.current.scrollHeight);
-    }
-  }, [messages, chatboxWrapper]);
+    setCurrentScrollHeight(chatboxWrapper.current?.scrollHeight ?? 1000000);
+  }, [messages]);
+
+  useEffect(() => {
+    chatboxWrapper.current?.scrollTo(0, currentScrollHeight);
+  }, [isOpen, currentScrollHeight]);
 
   return (
-    <Drawer>
+    <Drawer onOpenChange={setIsOpen} open={isOpen}>
       <DrawerTrigger asChild>
-        <BotMessageSquare className="w-10 h-auto text-[#c90d0f] fixed bottom-10 right-1/4 transform translate-x-1/2 cursor-pointer p-1" />
+        <BotMessageSquare className="w-10 h-auto text-[#c90d0f]/80 fixed bottom-4 md:bottom-10 right-0 md:right-1/4 transform translate-x-1/2 cursor-pointer p-1 hover:text-[#c90d0f] animate-bounce" />
       </DrawerTrigger>
       <DrawerContent>
         <form onSubmit={handleSubmit}>
@@ -93,11 +98,11 @@ export default function Chatbox({
                 />
               </div>
             </div>
-            <DrawerFooter>
-              <Button type="submit">Submit</Button>
+            <DrawerFooter className="flex flex-row items-stretch justify-end">
               <DrawerClose asChild>
                 <Button variant="outline">Cancel</Button>
               </DrawerClose>
+              <Button type="submit">Submit</Button>
             </DrawerFooter>
           </div>
         </form>
