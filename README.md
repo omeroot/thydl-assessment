@@ -19,3 +19,7 @@ pnpm dev
 - **langchain:** A framework for developing applications powered by language models.
 - **tesseractjs:** A JavaScript library for OCR (Optical Character Recognition) that recognizes text in images.
 - **shadcnui:** A UI component library for building modern and responsive user interfaces.
+
+
+### Example menu images
+./examples

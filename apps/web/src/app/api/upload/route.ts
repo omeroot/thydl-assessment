@@ -1,7 +1,5 @@
 /* eslint-disable turbo/no-undeclared-env-vars */
 /* eslint-disable no-console -- This directive is necessary to allow console logging for error handling */
-import { writeFile } from "node:fs/promises";
-import path from "node:path";
 import type { NextRequest } from "next/server";
 import { NextResponse } from "next/server";
 import { ChatOpenAI } from "@langchain/openai";
@@ -11,18 +9,7 @@ import { JsonOutputParser } from "@langchain/core/output_parsers";
 export async function POST(request: NextRequest) {
   try {
     const formData = await request.formData();
-
-    const file = formData.get("file") as File;
     const text = formData.get("text") as string;
-
-    const bytes = await file.arrayBuffer();
-    const buffer = new Uint8Array(bytes);
-
-    // Save to public/uploads directory
-    const uploadDir = path.join(process.cwd(), "public", "uploads");
-    const filePath = path.join(uploadDir, file.name);
-
-    await writeFile(filePath, buffer);
 
     const model = new ChatOpenAI({
       apiKey: process.env.OPENAI_API_KEY,
@@ -77,10 +64,6 @@ export async function POST(request: NextRequest) {
 
     return NextResponse.json({
       success: true,
-      file: {
-        name: file.name,
-        path: filePath,
-      },
       formatted: menu,
     });
   } catch (error) {

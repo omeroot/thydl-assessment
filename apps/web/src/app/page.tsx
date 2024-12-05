@@ -39,7 +39,6 @@ export default function FileUploader() {
 
     try {
       const formData = new FormData();
-      formData.append("file", file as Blob);
 
       setIsSent(false);
 
