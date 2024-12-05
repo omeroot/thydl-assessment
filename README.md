@@ -13,3 +13,9 @@ pnpm dev
 - **@thydl/tailwind-config:** Tailwind CSS configuration for styling and design consistency.
 - **@thydl/typescript-config:** Shared TypeScript configuration for type checking and code safety.
 - **@thydl/ui:** UI component library for building user interfaces.
+
+
+## Libraries
+- **langchain:** A framework for developing applications powered by language models.
+- **tesseractjs:** A JavaScript library for OCR (Optical Character Recognition) that recognizes text in images.
+- **shadcnui:** A UI component library for building modern and responsive user interfaces.
