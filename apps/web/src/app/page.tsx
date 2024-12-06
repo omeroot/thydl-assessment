@@ -1,8 +1,7 @@
-/* eslint-disable @typescript-eslint/no-misused-promises */
 /* eslint-disable no-console -- Disabling console warnings for development purposes */
 "use client";
 
-import { useEffect, useState } from "react";
+import { useCallback, useEffect, useState } from "react";
 import { useDropzone } from "react-dropzone";
 import { Button } from "@thydl/ui/components/ui/button";
 import {
@@ -18,96 +17,40 @@ import { ArrowRight, CircleX, CloudUpload, FileUp } from "lucide-react";
 import { toast } from "sonner";
 import { cn } from "@thydl/ui/lib/utils";
 import { useRouter } from "next/navigation";
-import Tesseract from "tesseract.js";
+import TextBoundaryCropper from "@/components/text-boundary";
 
 export default function FileUploader() {
-  const [file, setFile] = useState<File | null>(null);
-  const [isSent, setIsSent] = useState<boolean | null>(null);
+  const [selectedFile, setSelectedFile] = useState<File | null>(null);
+  const [processedText, setProcessedText] = useState<string>("");
+  const [isProcessing, setIsProcessing] = useState<boolean>(false);
+
   const [isMenuExists, setIsMenuExists] = useState<boolean | null>(null);
   const [buttonText, setButtonText] = useState<string>("Upload");
 
   const router = useRouter();
 
-  const onDrop = (acceptedFiles: File[]) => {
-    setFile(acceptedFiles[0]);
-  };
+  const { getRootProps, getInputProps, isDragActive, acceptedFiles } =
+    useDropzone({
+      accept: {
+        "image/*": [".png", ".jpg", ".jpeg"],
+      },
+      noDrag: isProcessing,
+    });
 
-  const { getRootProps, getInputProps, isDragActive } = useDropzone({ onDrop });
+  const handleUpload = useCallback(
+    (event: React.FormEvent<HTMLFormElement>) => {
+      event.preventDefault();
 
-  const handleUpload = async (event: React.FormEvent<HTMLFormElement>) => {
-    event.preventDefault();
+      setSelectedFile(acceptedFiles[acceptedFiles.length - 1]);
+    },
+    [acceptedFiles]
+  );
 
-    try {
-      const formData = new FormData();
+  const removeFile = useCallback(() => {
+    if (isProcessing) return;
 
-      setIsSent(false);
-
-      const recognizeText = async () => {
-        if (file) {
-          // eslint-disable-next-line import/no-named-as-default-member
-          const result = await Tesseract.recognize(file);
-
-          return result.data.text;
-        }
-
-        return "";
-      };
-
-      setButtonText("Extracting text...");
-
-      const text = await recognizeText();
-      formData.append("text", text);
-
-      setButtonText("Uploading...");
-      const response = await fetch("/api/upload", {
-        method: "POST",
-        body: formData,
-      });
-
-      if (!response.ok) {
-        throw new Error("Upload failed");
-      }
-
-      const result = (await response.json()) as {
-        success: boolean;
-        file: {
-          name: string;
-          path: string;
-        };
-        formatted: {
-          menu: { name: string; description: string }[];
-          notes: string[];
-        };
-      };
-
-      if (!result.success) {
-        throw new Error("Upload failed");
-      }
-
-      localStorage.setItem("formattedMenu", JSON.stringify(result.formatted));
-
-      toast.success("Files uploaded successfully", {
-        position: "top-right",
-        onAutoClose: () => {
-          router.push(`/menu`);
-        },
-        onDismiss: () => {
-          router.push(`/menu`);
-        },
-      });
-    } catch (error) {
-      console.error("Upload error:", error);
-      toast.error("Failed to upload files");
-
-      setIsSent(null);
-      setButtonText("Upload");
-    }
-  };
-
-  const removeFile = () => {
-    setFile(null);
-    setIsSent(null);
-  };
+    setSelectedFile(null);
+  }, [isProcessing]);
 
   useEffect(() => {
     const checkMenuExists = () => {
@@ -120,6 +63,65 @@ export default function FileUploader() {
 
     setIsMenuExists(checkMenuExists());
   }, []);
+
+  useEffect(() => {
+    if (!processedText) return;
+
+    const run = async () => {
+      try {
+        setButtonText("Uploading...");
+
+        const formData = new FormData();
+        formData.append("text", processedText);
+
+        const response = await fetch("/api/upload", {
+          method: "POST",
+          body: formData,
+        });
+
+        if (!response.ok) {
+          throw new Error("Upload failed");
+        }
+
+        const result = (await response.json()) as {
+          success: boolean;
+          file: {
+            name: string;
+            path: string;
+          };
+          formatted: {
+            menu: { name: string; description: string }[];
+            notes: string[];
+          };
+        };
+
+        if (!result.success) {
+          throw new Error("Upload failed");
+        }
+
+        localStorage.setItem("formattedMenu", JSON.stringify(result.formatted));
+
+        toast.success("Files uploaded successfully", {
+          position: "top-right",
+          onAutoClose: () => {
+            router.push(`/menu`);
+          },
+          onDismiss: () => {
+            router.push(`/menu`);
+          },
+        });
+      } catch (error) {
+        console.error("Upload error:", error);
+        toast.error("Failed to upload files");
+      } finally {
+        setIsProcessing(false);
+        setSelectedFile(null);
+        setButtonText("Upload");
+      }
+    };
+
+    void run();
+  }, [processedText, router]);
 
   return (
     <div className="relative flex flex-col items-center min-h-screen container py-10">
@@ -160,23 +162,25 @@ export default function FileUploader() {
                 </p>
               </div>
             </div>
-            {file ? (
+            <em className="text-xs text-gray-500">
+              Only .png, .jpg, and .jpeg files are supported.
+            </em>
+            {acceptedFiles.length > 0 ? (
               <div className="mt-8">
                 <div
                   className="flex flex-col px-2 py-4 border border-gray-300/40 rounded-md"
-                  key={file.name}
-                  title={file.name}
+                  key={acceptedFiles[acceptedFiles.length - 1].name}
+                  title={acceptedFiles[acceptedFiles.length - 1].name}
                 >
-                  <div className="flex items-center flex-row flex-nowrap max-w-xs lg:max-w-full">
+                  <div className="flex items-center flex-row flex-nowrap max-w-xs md:max-w-full">
                     <FileUp
                       className={cn(
                         "w-6 h-auto",
-                        isSent && " text-green-500",
-                        isSent === false && "animate-pulse"
+                        isProcessing && "animate-pulse"
                       )}
                     />
                     <span className="truncate text-sm w-full max-w-xs ml-2 mr-4">
-                      {file.name}
+                      {acceptedFiles[acceptedFiles.length - 1].name}
                     </span>
 
                     <CircleX
@@ -190,17 +194,36 @@ export default function FileUploader() {
               </div>
             ) : null}
           </CardContent>
-          <CardFooter className="flex justify-end">
+          <CardFooter className="flex justify-end items-end flex-col">
             <Button
               className="bg-[#c90d0f] hover:bg-[#c90d0f]/80"
-              disabled={isSent === false}
+              disabled={isProcessing}
               type="submit"
             >
               {buttonText}
             </Button>
+            {isProcessing ? (
+              <em className="text-[0.5rem] text-gray-600 mt-1">
+                It may take a while to process the image.
+              </em>
+            ) : null}
           </CardFooter>
         </Card>
       </form>
+
+      {selectedFile ? (
+        <TextBoundaryCropper
+          file={selectedFile}
+          onTextExtracted={(text) => {
+            console.log("🚀 ~ file: page.tsx:221 ~ FileUploader ~ text", text);
+            setProcessedText(text);
+          }}
+          onTextExtractionStarted={() => {
+            setButtonText("Extracting...");
+            setIsProcessing(true);
+          }}
+        />
+      ) : null}
     </div>
   );
 }

@@ -31,9 +31,11 @@ export async function POST(request: NextRequest) {
     const menu = await chain.invoke({
       query: `
         Extract the restaurant menu items and their details in JSON format with precision and completeness.
+        Menu contains two languages: English and Turkish. You should extract the menu items in English.
 
         Output JSON Structure:
         {
+          "language": "en-US",
           "menu": [
             {
               "name": "string",         // Exact menu item name
@@ -45,11 +47,10 @@ export async function POST(request: NextRequest) {
 
         Extraction Guidelines:
         - Preserve original item order from source text
-        - Maintain source text's original language
         - Create descriptive menu item details using available ingredient information
         - Ensure name and description accurately reflect source text
-        - Include all notes in original sequence and language
-        - The menu item name and description should be in the same language as the text.
+        - Include all notes in original sequence and english
+        - The menu item name and description should be in the english as the text.
 
         Parsing Instructions:
         1. Carefully review entire text for menu items
