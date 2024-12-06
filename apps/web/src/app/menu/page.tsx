@@ -11,11 +11,10 @@ import {
 import Image from "next/image";
 import { useEffect, useState } from "react";
 import {
-  Tooltip,
-  TooltipContent,
-  TooltipProvider,
-  TooltipTrigger,
-} from "@thydl/ui/components/ui/tooltip";
+  Popover,
+  PopoverContent,
+  PopoverTrigger,
+} from "@thydl/ui/components/ui/popover";
 import { Info } from "lucide-react";
 import RestaurantMenu from "@/components/res-menu";
 import Chatbox from "@/components/chatbox";
@@ -52,24 +51,22 @@ export default function MenuPage() {
               <BreadcrumbLink href="/">Upload new menu</BreadcrumbLink>
             </BreadcrumbItem>
             <BreadcrumbSeparator />
-            <BreadcrumbItem>
+            <BreadcrumbItem className="flex items-center gap-1">
               <BreadcrumbPage>Menu</BreadcrumbPage>
               {formattedMenu.notes.length > 0 ? (
-                <TooltipProvider delayDuration={0}>
-                  <Tooltip>
-                    <TooltipTrigger asChild>
-                      <Info className="w-4 h-auto cursor-pointer" />
-                    </TooltipTrigger>
-                    <TooltipContent
-                      className="flex flex-col gap-1"
-                      side="right"
-                    >
-                      {formattedMenu.notes.map((note) => (
-                        <p key={note}>- {note}</p>
-                      ))}
-                    </TooltipContent>
-                  </Tooltip>
-                </TooltipProvider>
+                <Popover>
+                  <PopoverTrigger asChild>
+                    <Info className="w-4 h-auto cursor-pointer" />
+                  </PopoverTrigger>
+                  <PopoverContent
+                    className="flex flex-col gap-1 text-xs"
+                    side="bottom"
+                  >
+                    {formattedMenu.notes.map((note) => (
+                      <p key={note}>- {note}</p>
+                    ))}
+                  </PopoverContent>
+                </Popover>
               ) : null}
             </BreadcrumbItem>
           </BreadcrumbList>

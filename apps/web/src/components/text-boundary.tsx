@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useRef } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
 import { createWorker } from "tesseract.js";
 
 function TextBoundaryCropper({
@@ -7,22 +7,28 @@ function TextBoundaryCropper({
   onTextExtractionStarted,
   useBoundary = false,
 }: {
-  file: File;
+  file?: File | null;
   onTextExtracted?: (text: string) => void;
   onTextExtractionStarted?: () => void;
   useBoundary?: boolean;
 }) {
   const canvasRef = useRef<HTMLCanvasElement | null>(null);
   const originalImageRef = useRef<CanvasImageSource | null>(null);
+  const [isProcessing, setIsProcessing] = useState(false);
 
   const extractText = useCallback(
-    async (blob: Blob) => {
+    async (image: HTMLImageElement) => {
+      if (!file) return;
+
       const worker = await createWorker("eng");
 
-      const image = new Image();
-      image.src = URL.createObjectURL(blob);
+      const canvas = canvasRef.current;
+      if (!canvas) return;
 
-      let text = "";
+      const ctx = canvas.getContext("2d");
+      if (!ctx) return;
+
+      if (!originalImageRef.current) return;
 
       if (useBoundary) {
         const {
@@ -50,15 +56,8 @@ function TextBoundaryCropper({
         maxX = Math.min(image.width, maxX + padding);
         maxY = Math.min(image.height, maxY + padding);
 
-        // Crop the image
-        const canvas = canvasRef.current;
-        if (!canvas) return;
-
         canvas.width = maxX - minX;
         canvas.height = maxY - minY;
-        const ctx = canvas.getContext("2d");
-
-        if (!ctx || !originalImageRef.current) return;
 
         ctx.drawImage(
           originalImageRef.current,
@@ -71,47 +70,56 @@ function TextBoundaryCropper({
           maxX - minX,
           maxY - minY
         );
+      } else {
+        canvas.width = image.width;
+        canvas.height = image.height;
 
-        const rightHalf = ctx.getImageData(
-          image.width / 2,
+        ctx.drawImage(
+          originalImageRef.current,
           0,
-          image.width / 2,
+          0,
+          image.width,
           image.height
         );
-
-        const rightCanvas = document.createElement("canvas");
-        rightCanvas.width = image.width / 2;
-        rightCanvas.height = image.height;
-
-        const rightCtx = rightCanvas.getContext("2d");
-
-        if (!rightCtx) return;
-
-        rightCtx.putImageData(rightHalf, 0, 0);
-
-        // recognize tesseract right canvas
-        const data = await worker.recognize(rightCanvas, undefined, {
-          blocks: true,
-          layoutBlocks: true,
-        });
-
-        text = data.data.text;
-      } else {
-        const { data } = await worker.recognize(image);
-        text = data.text;
       }
 
+      const rightHalf = ctx.getImageData(
+        image.width / 2,
+        0,
+        image.width / 2,
+        image.height
+      );
+
+      if (!canvasRef.current) return;
+
+      canvasRef.current.width = image.width / 2;
+      canvasRef.current.height = image.height;
+
+      ctx.putImageData(rightHalf, 0, 0);
+
+      // recognize tesseract right canvas
+      const data = await worker.recognize(canvasRef.current, undefined, {
+        blocks: true,
+        layoutBlocks: true,
+      });
+
+      const text = data.data.text || "";
       onTextExtracted?.(text);
 
       await worker.terminate();
+      setIsProcessing(false);
     },
     [file, onTextExtracted, useBoundary]
   );
 
   useEffect(() => {
+    if (!file) return;
+
     const loadImageToCanvas = () => {
+      if (!canvasRef.current || isProcessing) return;
+
+      setIsProcessing(true);
       onTextExtractionStarted?.();
-      if (!canvasRef.current) return;
 
       const canvas = canvasRef.current;
       const ctx = canvas.getContext("2d");
@@ -120,37 +128,24 @@ function TextBoundaryCropper({
 
       const reader = new FileReader();
 
-      reader.readAsDataURL(file);
-
-      reader.onload = () => {
+      reader.onload = (e) => {
         const img = new Image();
         img.src = reader.result as string;
 
         img.onload = () => {
           originalImageRef.current = img;
 
-          // Create a temporary canvas to load the image
-          const tempCanvas = document.createElement("canvas");
-          tempCanvas.width = img.width;
-          tempCanvas.height = img.height;
-          const tempCtx = tempCanvas.getContext("2d");
-
-          if (!tempCtx) return;
-
-          tempCtx.drawImage(img, 0, 0, img.width, img.height);
-
-          // Convert canvas to file for Tesseract
-          tempCanvas.toBlob((blob) => {
-            if (!blob) return;
-
-            void extractText(blob);
-          });
+          void extractText(img);
         };
+
+        img.src = e.target?.result as string;
       };
+
+      reader.readAsDataURL(file);
     };
 
     loadImageToCanvas();
-  }, [file, extractText, onTextExtractionStarted]);
+  }, [file, extractText, onTextExtractionStarted, canvasRef, isProcessing]);
 
   return <canvas className="hidden" ref={canvasRef} />;
 }

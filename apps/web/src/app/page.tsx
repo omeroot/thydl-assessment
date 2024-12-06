@@ -13,9 +13,8 @@ import {
   CardTitle,
 } from "@thydl/ui/components/ui/card";
 import Image from "next/image";
-import { ArrowRight, CircleX, CloudUpload, FileUp } from "lucide-react";
+import { ArrowRight, CloudUpload, FileUp, Link } from "lucide-react";
 import { toast } from "sonner";
-import { cn } from "@thydl/ui/lib/utils";
 import { useRouter } from "next/navigation";
 import TextBoundaryCropper from "@/components/text-boundary";
 
@@ -46,12 +45,6 @@ export default function FileUploader() {
     [acceptedFiles]
   );
 
-  const removeFile = useCallback(() => {
-    if (isProcessing) return;
-
-    setSelectedFile(null);
-  }, [isProcessing]);
-
   useEffect(() => {
     const checkMenuExists = () => {
       try {
@@ -69,8 +62,6 @@ export default function FileUploader() {
 
     const run = async () => {
       try {
-        setButtonText("Uploading...");
-
         const formData = new FormData();
         formData.append("text", processedText);
 
@@ -104,9 +95,11 @@ export default function FileUploader() {
         toast.success("Files uploaded successfully", {
           position: "top-right",
           onAutoClose: () => {
+            setIsProcessing(false);
             router.push(`/menu`);
           },
           onDismiss: () => {
+            setIsProcessing(false);
             router.push(`/menu`);
           },
         });
@@ -114,7 +107,6 @@ export default function FileUploader() {
         console.error("Upload error:", error);
         toast.error("Failed to upload files");
       } finally {
-        setIsProcessing(false);
         setSelectedFile(null);
         setButtonText("Upload");
       }
@@ -132,7 +124,7 @@ export default function FileUploader() {
       <form action="/api/upload" className="mt-8" onSubmit={handleUpload}>
         {isMenuExists ? (
           <a
-            className="lg:py-2 text-blue-500 ml-auto flex flex-row items-center md:justify-end gap-2 text-sm animate-pulse flex-1 lg:flex-none mb-4"
+            className="lg:py-2 text-blue-500 ml-auto flex flex-row items-center justify-end gap-2 text-sm animate-pulse flex-1 lg:flex-none mb-4"
             href="/menu"
           >
             Look at Previous Menu
@@ -153,7 +145,7 @@ export default function FileUploader() {
             >
               <input {...getInputProps({ accept: "image/*" })} />
 
-              <div className="flex flex-col items-center gap-2 lg:w-96">
+              <div className="flex flex-col items-center gap-2 md:w-96">
                 <CloudUpload className="w-10 text-blue-500 h-auto" />
                 <p className="text-sm">
                   {isDragActive
@@ -162,33 +154,47 @@ export default function FileUploader() {
                 </p>
               </div>
             </div>
-            <em className="text-xs text-gray-500">
-              Only .png, .jpg, and .jpeg files are supported.
-            </em>
+            <ul className="text-xs text-gray-500 list-disc list-inside">
+              <li>Only .png, .jpg, and .jpeg files are supported.</li>
+              <li>Add new image to replace the current one.</li>
+            </ul>
             {acceptedFiles.length > 0 ? (
               <div className="mt-8">
                 <div
-                  className="flex flex-col px-2 py-4 border border-gray-300/40 rounded-md"
+                  className="flex flex-col px-2 py-1 border border-gray-300/40 rounded-md"
                   key={acceptedFiles[acceptedFiles.length - 1].name}
                   title={acceptedFiles[acceptedFiles.length - 1].name}
                 >
                   <div className="flex items-center flex-row flex-nowrap max-w-xs md:max-w-full">
-                    <FileUp
-                      className={cn(
-                        "w-6 h-auto",
-                        isProcessing && "animate-pulse"
-                      )}
-                    />
+                    {isProcessing ? (
+                      <FileUp className="w-6 h-auto animate-pulse" />
+                    ) : (
+                      <button
+                        className="relative bg-white rounded-md border border-gray-300/40 overflow-hidden cursor-pointer"
+                        onClick={() =>
+                          window.open(
+                            URL.createObjectURL(
+                              acceptedFiles[acceptedFiles.length - 1]
+                            ),
+                            "_blank"
+                          )
+                        }
+                        type="button"
+                      >
+                        <Image
+                          alt={acceptedFiles[acceptedFiles.length - 1].name}
+                          height={24}
+                          src={URL.createObjectURL(
+                            acceptedFiles[acceptedFiles.length - 1]
+                          )}
+                          width={24}
+                        />
+                        <Link className="w-4 h-auto absolute inset-0 m-auto text-white flex items-center justify-center" />
+                      </button>
+                    )}
                     <span className="truncate text-sm w-full max-w-xs ml-2 mr-4">
                       {acceptedFiles[acceptedFiles.length - 1].name}
                     </span>
-
-                    <CircleX
-                      className="w-6 ml-auto h-auto text-red-500 cursor-pointer"
-                      onClick={() => {
-                        removeFile();
-                      }}
-                    />
                   </div>
                 </div>
               </div>
@@ -211,19 +217,20 @@ export default function FileUploader() {
         </Card>
       </form>
 
-      {selectedFile ? (
-        <TextBoundaryCropper
-          file={selectedFile}
-          onTextExtracted={(text) => {
-            console.log("🚀 ~ file: page.tsx:221 ~ FileUploader ~ text", text);
-            setProcessedText(text);
-          }}
-          onTextExtractionStarted={() => {
-            setButtonText("Extracting...");
-            setIsProcessing(true);
-          }}
-        />
-      ) : null}
+      <TextBoundaryCropper
+        file={!isProcessing ? selectedFile : null}
+        onTextExtracted={(text) => {
+          console.log("🚀 ~ file: page.tsx:221 ~ FileUploader ~ text", text);
+
+          setButtonText("Uploading...");
+          setProcessedText(text);
+        }}
+        onTextExtractionStarted={() => {
+          setButtonText("Extracting...");
+          setIsProcessing(true);
+        }}
+        // useBoundary
+      />
     </div>
   );
 }

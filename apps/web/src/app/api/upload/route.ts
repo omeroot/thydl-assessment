@@ -31,11 +31,9 @@ export async function POST(request: NextRequest) {
     const menu = await chain.invoke({
       query: `
         Extract the restaurant menu items and their details in JSON format with precision and completeness.
-        Menu contains two languages: English and Turkish. You should extract the menu items in English.
 
         Output JSON Structure:
         {
-          "language": "en-US",
           "menu": [
             {
               "name": "string",         // Exact menu item name
@@ -49,8 +47,6 @@ export async function POST(request: NextRequest) {
         - Preserve original item order from source text
         - Create descriptive menu item details using available ingredient information
         - Ensure name and description accurately reflect source text
-        - Include all notes in original sequence and english
-        - The menu item name and description should be in the english as the text.
 
         Parsing Instructions:
         1. Carefully review entire text for menu items
@@ -63,23 +59,23 @@ export async function POST(request: NextRequest) {
       `,
     });
 
-    const translatePrompt = ChatPromptTemplate.fromMessages([
-      [
-        "system",
-        "Translate the following json object non-english values to English.",
-      ],
-      ["human", "{json}"],
-    ]);
+    // const translatePrompt = ChatPromptTemplate.fromMessages([
+    //   [
+    //     "system",
+    //     "Translate the following json object non-english values to English.",
+    //   ],
+    //   ["human", "{json}"],
+    // ]);
 
-    const translateChain = translatePrompt.pipe(model).pipe(parser);
+    // const translateChain = translatePrompt.pipe(model).pipe(parser);
 
-    const translatedMenu = await translateChain.invoke({
-      json: menu,
-    });
+    // const translatedMenu = await translateChain.invoke({
+    //   json: menu,
+    // });
 
     return NextResponse.json({
       success: true,
-      formatted: translatedMenu,
+      formatted: menu,
     });
   } catch (error) {
     console.log("🚀 ~ file: route.ts:35 ~ POST ~ error", error);
