@@ -13,9 +13,10 @@ import {
   CardTitle,
 } from "@thydl/ui/components/ui/card";
 import Image from "next/image";
-import { ArrowRight, CloudUpload, FileUp, Link } from "lucide-react";
+import { ArrowRight, CloudUpload, Link } from "lucide-react";
 import { toast } from "sonner";
 import { useRouter } from "next/navigation";
+import { cn } from "@thydl/ui/lib/utils";
 import TextBoundaryCropper from "@/components/text-boundary";
 
 export default function FileUploader() {
@@ -165,33 +166,34 @@ export default function FileUploader() {
                   key={acceptedFiles[acceptedFiles.length - 1].name}
                   title={acceptedFiles[acceptedFiles.length - 1].name}
                 >
-                  <div className="flex items-center flex-row flex-nowrap max-w-xs md:max-w-full">
-                    {isProcessing ? (
-                      <FileUp className="w-6 h-auto animate-pulse" />
-                    ) : (
-                      <button
-                        className="relative bg-white rounded-md border border-gray-300/40 overflow-hidden cursor-pointer"
-                        onClick={() =>
-                          window.open(
-                            URL.createObjectURL(
-                              acceptedFiles[acceptedFiles.length - 1]
-                            ),
-                            "_blank"
-                          )
-                        }
-                        type="button"
-                      >
-                        <Image
-                          alt={acceptedFiles[acceptedFiles.length - 1].name}
-                          height={24}
-                          src={URL.createObjectURL(
-                            acceptedFiles[acceptedFiles.length - 1]
-                          )}
-                          width={24}
-                        />
-                        <Link className="w-4 h-auto absolute inset-0 m-auto text-white flex items-center justify-center" />
-                      </button>
+                  <div
+                    className={cn(
+                      "flex items-center flex-row flex-nowrap max-w-xs md:max-w-full",
+                      isProcessing && "animate-pulse"
                     )}
+                  >
+                    <button
+                      className="relative bg-white rounded-md border border-gray-300/40 overflow-hidden cursor-pointer"
+                      onClick={() =>
+                        window.open(
+                          URL.createObjectURL(
+                            acceptedFiles[acceptedFiles.length - 1]
+                          ),
+                          "_blank"
+                        )
+                      }
+                      type="button"
+                    >
+                      <Image
+                        alt={acceptedFiles[acceptedFiles.length - 1].name}
+                        height={24}
+                        src={URL.createObjectURL(
+                          acceptedFiles[acceptedFiles.length - 1]
+                        )}
+                        width={24}
+                      />
+                      <Link className="w-4 h-auto absolute inset-0 m-auto text-white flex items-center justify-center" />
+                    </button>
                     <span className="truncate text-sm w-full max-w-xs ml-2 mr-4">
                       {acceptedFiles[acceptedFiles.length - 1].name}
                     </span>

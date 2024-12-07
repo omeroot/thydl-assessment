@@ -59,20 +59,6 @@ export async function POST(request: NextRequest) {
       `,
     });
 
-    // const translatePrompt = ChatPromptTemplate.fromMessages([
-    //   [
-    //     "system",
-    //     "Translate the following json object non-english values to English.",
-    //   ],
-    //   ["human", "{json}"],
-    // ]);
-
-    // const translateChain = translatePrompt.pipe(model).pipe(parser);
-
-    // const translatedMenu = await translateChain.invoke({
-    //   json: menu,
-    // });
-
     return NextResponse.json({
       success: true,
       formatted: menu,

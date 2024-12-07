@@ -84,8 +84,3 @@ Minimum gpt token size and high accuracy passing language complex barrier.
 ### Environment Variables
 
 - **process.env.OPENAI_API_KEY**: Used in the `POST /api/upload` endpoint to authenticate requests to the OpenAI API.
-
-### ESLint Directives
-
-- **eslint-disable turbo/no-undeclared-env-vars**: Used in the `POST /api/upload` endpoint to disable ESLint warnings for undeclared environment variables.
-- **eslint-disable no-console**: Used in the `POST /api/upload` endpoint and the `FileUploader` component to disable ESLint warnings for console logging, which is necessary for error handling and debugging during development.
