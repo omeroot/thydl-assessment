@@ -1,4 +1,4 @@
-# Turkish Technology Digital Lab Assesment
+# Turkish Technology Digital Lab Assessment
 
 ## Run Locally
 
